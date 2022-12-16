@@ -1,4 +1,5 @@
 -- 3 ddl scripts
+DROP SCHEMA IF EXISTS db_project CASCADE;
 CREATE SCHEMA db_project;
 SET SEARCH_PATH = db_project;
 
@@ -320,4 +321,3 @@ INSERT INTO status_history(task_id, status_id, valid_until)
 VALUES (8, 4, '2022-12-10 10:00:00.679985+02');
 INSERT INTO status_history(task_id, status_id, valid_until)
 VALUES (8, 5, '2022-12-11 10:00:00.679985+02');
-

@@ -27,13 +27,13 @@ SET name = name || ' Internal'
 WHERE NOT (name LIKE 'Chrome%');
 -- remove all data about team #4
 DELETE
-FROM teams
+FROM team_X_user
 WHERE team_id = 4;
 DELETE
 FROM team_x_project
 WHERE team_id = 4;
 DELETE
-FROM team_X_user
+FROM teams
 WHERE team_id = 4;
 -- get number of projects for each team
 SELECT name, count(*)
@@ -42,8 +42,9 @@ FROM teams
 GROUP BY name;
 
 -- #7
+DROP SCHEMA IF EXISTS db_project_views CASCADE ;
 CREATE SCHEMA db_project_views;
-SET SEARCH_PATH = db_project_views;
+--SET SEARCH_PATH = db_project_views;
 
 CREATE VIEW db_project_views.users as
 (
@@ -146,9 +147,9 @@ FROM db_project.tasks
 UNION ALL
 SELECT n + 1 as dt
 FROM days
-where n < (select max(db_project.tasks.creation_date) from db_project.tasks))
+where n < (select max(db_project.tasks.creation_date) from db_project.tasks));
 
-DROP VIEW num_of_tasks;
+DROP VIEW IF EXISTS num_of_tasks;
 CREATE VIEW num_of_tasks as
 (
 SELECT DISTINCT days.n, projects.name, count(projects.name) over (partition by projects.name order by days.n )
