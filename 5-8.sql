@@ -42,10 +42,11 @@ FROM teams
 GROUP BY name;
 
 -- #7
-DROP SCHEMA IF EXISTS db_project_views CASCADE ;
+DROP SCHEMA IF EXISTS db_project_views CASCADE;
 CREATE SCHEMA db_project_views;
 --SET SEARCH_PATH = db_project_views;
 
+DROP VIEW IF EXISTS db_project_views.users;
 CREATE VIEW db_project_views.users as
 (
 SELECT db_project.users.user_id,
@@ -53,6 +54,45 @@ SELECT db_project.users.user_id,
        db_project.users.role_id,
        overlay(db_project.users.password placing '****' from 2)
 FROM db_project.users
+    );
+
+DROP VIEW IF EXISTS db_project_views.statuses;
+CREATE VIEW db_project_views.statuses as
+(
+SELECT db_project.statuses.name
+FROM db_project.statuses
+    );
+
+DROP VIEW IF EXISTS db_project_views.roles;
+CREATE VIEW db_project_views.roles as
+(
+SELECT db_project.roles.name
+FROM db_project.roles
+    );
+
+DROP VIEW IF EXISTS db_project_views.teams;
+CREATE VIEW db_project_views.teams as
+(
+SELECT db_project.teams.name
+FROM db_project.teams
+    );
+
+DROP VIEW IF EXISTS db_project_views.projects;
+CREATE VIEW db_project_views.projects as
+(
+SELECT db_project.projects.name,
+       db_project.projects.description
+
+FROM db_project.projects
+    );
+
+DROP VIEW IF EXISTS db_project_views.tasks;
+CREATE VIEW db_project_views.tasks as
+(
+SELECT db_project.tasks.name,
+       db_project.tasks.creation_date
+
+FROM db_project.tasks
     );
 
 DROP VIEW IF EXISTS db_project_views.teams_X_projects;
@@ -165,32 +205,34 @@ DROP VIEW IF EXISTS last_activity;
 CREATE VIEW last_activity as
 (
 SELECT username, tasks.name as task_name, label, time
-FROM (SELECT
-          max(a.time) over (partition by user_name) as t,
-             a.time as time,
-             users.user_name as username,
-             a.label as label,
-             a.task_id as task_id
-          FROM
-              users
-         left join actions a on users.user_id = a.user_id) as subq left join tasks on subq.task_id=tasks.task_id
-WHERE  date_trunc('day', t) = date_trunc('day', time) or label IS NULL
+FROM (SELECT max(a.time) over (partition by user_name) as t,
+             a.time                                    as time,
+             users.user_name                           as username,
+             a.label                                   as label,
+             a.task_id                                 as task_id
+      FROM users
+               left join actions a on users.user_id = a.user_id) as subq
+         left join tasks on subq.task_id = tasks.task_id
+WHERE date_trunc('day', t) = date_trunc('day', time)
+   or label IS NULL
     );
 
-SELECT * FROM last_activity;
+SELECT *
+FROM last_activity;
 
 -- 3) for each role count how many action they do
 DROP VIEW IF EXISTS types_per_role;
 CREATE VIEW types_per_role as
 (
-SELECT
-    roles.name as role,
-    label as lable,
-    count(*)
-    FROM (roles left join users u on roles.role_id = u.role_id) left join actions a on u.user_id=a.user_id
+SELECT roles.name as role,
+       label      as lable,
+       count(*)
+FROM (roles left join users u on roles.role_id = u.role_id)
+         left join actions a on u.user_id = a.user_id
 GROUP BY role, lable);
 
-SELECT * FROM types_per_role;
+SELECT *
+FROM types_per_role;
 
 -- 9 2 triggers
 
